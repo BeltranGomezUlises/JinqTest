@@ -2,21 +2,23 @@
 import com.mongodb.DB;
 import entities.mongo.Mascota;
 import entities.mongo.Person;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import org.eclipse.persistence.internal.nosql.adapters.mongo.MongoConnection;
+import org.jinq.jpa.JPAQueryLogger;
+import org.jinq.jpa.JinqJPAStreamProvider;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /*
@@ -32,6 +34,11 @@ import org.junit.Test;
 public class MongoTest {
 
     /**
+     * Proveedor de streams jpa
+     */
+    private static JinqJPAStreamProvider streams;
+
+    /**
      * entity manager.
      */
     private static EntityManager em;
@@ -45,7 +52,19 @@ public class MongoTest {
 
     @BeforeClass
     public static void setUpPU() {
-        em = Persistence.createEntityManagerFactory("mongo-unit").createEntityManager();
+        EntityManagerFactory factory = Persistence.createEntityManagerFactory("mongo-unit");
+        em = factory.createEntityManager();
+        
+        /**
+         * No realiza el mapeo de los atributos y marca un error, intentar revisar con que anotacion o asignacion se puede arreglar
+         * o probar con un proveedor distinto coom hibernate
+         * 
+         */
+//        streams = new JinqJPAStreamProvider(factory);
+//        streams.setHint(
+//                "queryLogger", (JPAQueryLogger) (String query, Map<Integer, Object> positionParameters, Map<String, Object> namedParameters) -> {
+//                    System.out.println("queryLogr -> " + query);
+//                });
     }
 
     /**
@@ -96,16 +115,16 @@ public class MongoTest {
     /**
      * Uses JPQL query (that gets translated to native MongoDB query.
      */
-//    @Test
-//    public void should_find_by_items_quantity() {
-//        // when
-//        Person order = em
-//                .createQuery("SELECT p FROM Person p JOIN o.mascotas i WHERE i.edad = 1", Person.class)                
-//                .getSingleResult();
-//
-//        // then
-//        assertPerson(order);
-//    }
+    @Test
+    public void should_find_by_items_quantity() {
+        // when
+        Person order = em
+                .createQuery("SELECT p FROM Person p JOIN p.mascotas i WHERE i.edad = 1", Person.class)
+                .getSingleResult();
+
+        // then
+        assertPerson(order);
+    }
 
     /**
      * Uses native MongoDB query (which consists of the full find command like
@@ -117,8 +136,8 @@ public class MongoTest {
     @Test
     public void should_find_by_primary_with_native_query() {
         // when
-        Person person = (Person) em  
-                .createNativeQuery("db.PERSON.findOne({_id: \"" + id + "\"})", Person.class)
+        Person person = (Person) em
+                .createNativeQuery("db.persons.findOne({_id: \"" + id + "\"})", Person.class)
                 .getSingleResult();
         // then
         assertPerson(person);
@@ -128,15 +147,40 @@ public class MongoTest {
      * Native queries with nested paths (in this example "ITEMS.QUANTITY") do
      * not seem to work properly, they raise an error.
      */
-    @Ignore
+    @Test
     public void should_find_by_items_quantity_with_native_query() {
         // when
         Person order = (Person) em
-                .createNativeQuery("db.PERSON.findOne({\"MASCOTAS.EDAD\": 2})", Person.class)
+                .createNativeQuery("db.persons.findOne({\"mascotas.edad\": 1})", Person.class)
                 .getSingleResult();
         // then
         assertPerson(order);
     }
+
+    /**
+     * IMPRIME TODAS LAS PERSONAS   
+     */
+//    @Test
+//    public void jinqFindAll() {
+//        streams.streamAll(em, Person.class)
+//                .forEach( p -> System.out.println(p));
+//    }
+//    
+//    @Test
+//    public void jinqFilter() {
+//        streams.streamAll(em, Person.class)
+//                .filter(p -> p.getNombre().equals("ulises"))
+//                .forEach( p -> System.out.println(p));
+//    }
+//    
+//    @Test
+//    public void jinqMap() {
+//        streams.streamAll(em, Person.class)
+//                .map( p -> p.getMascotas())
+//                .forEach( mascotas -> mascotas
+//                        .forEach(mascota -> System.out.println(mascota.getNombre()))
+//                );
+//    }
 
     @After
     public void tearDown() {

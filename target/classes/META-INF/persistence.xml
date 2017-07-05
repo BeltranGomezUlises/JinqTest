@@ -3,8 +3,7 @@
   <persistence-unit name="postgres-unit" transaction-type="RESOURCE_LOCAL">
     <class>entities.postrgres.Usuario</class>
     <class>entities.postrgres.Rol</class>
-    <class>entities.postrgres.Permiso</class>
-    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <class>entities.postrgres.Permiso</class>    
     <properties>
       <!-- jdbc -->
       <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>

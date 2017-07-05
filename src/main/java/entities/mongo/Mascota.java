@@ -9,20 +9,20 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import org.eclipse.persistence.nosql.annotations.DataFormatType;
-import org.eclipse.persistence.nosql.annotations.Field;
 import org.eclipse.persistence.nosql.annotations.NoSql;
 
 /**
  *
  * @author Ulises Beltrán Gómez --- beltrangomezulises@gmail.com
  */
+
 @Embeddable // necesario para poder incrustar en una entidad
 @NoSql(dataFormat = DataFormatType.MAPPED) // mapeado a base de datos NoSQL
 public class Mascota implements Serializable {
 
-    @Field(name = "edad") //nombre de campo con field de eclipselink
+    @Column(name = "edad") //nombre de campo con field de eclipselink
     private int edad;
-    @Field(name = "nombre")
+    @Column(name = "nombre")
     private String nombre;
 
     @Column(name = "commentarios") //nombre de campo con column de JPA
@@ -40,8 +40,8 @@ public class Mascota implements Serializable {
         this.edad = edad;
         this.nombre = nombre;
         this.comentarios = comentarios;
-    }   
-    
+    }
+
     public int getEdad() {
         return edad;
     }
@@ -64,6 +64,11 @@ public class Mascota implements Serializable {
 
     public void setComentarios(String comentarios) {
         this.comentarios = comentarios;
+    }
+
+    @Override
+    public String toString() {
+        return "Mascota{" + "edad=" + edad + ", nombre=" + nombre + ", comentarios=" + comentarios + '}';
     }
 
 }
