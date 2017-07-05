@@ -1,7 +1,13 @@
 package tests.jinqtest;
 
-import entities.Region;
-import entities.Sucursal;
+import daos.PermisoJpaController;
+import daos.RolJpaController;
+import daos.UsuarioJpaController;
+import entities.postrgres.Permiso;
+import entities.postrgres.Rol;
+import entities.postrgres.Usuario;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -9,11 +15,6 @@ import javax.persistence.Persistence;
 import org.jinq.jpa.JPAQueryLogger;
 import org.jinq.jpa.JinqJPAStreamProvider;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this tEMplate file, choose Tools | TEMplates
- * and open the tEMplate in the editor.
- */
 /**
  *
  * @author Ulises Beltrán Gómez --- beltrangomezulises@gmail.com
@@ -24,7 +25,6 @@ public class Main {
     private static final EntityManager EM = FACTORY.createEntityManager();
 
     private static final JinqJPAStreamProvider STREAMS = new JinqJPAStreamProvider(FACTORY);
-//        
 
     static {
         STREAMS.setHint(
@@ -34,60 +34,88 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        //initDBExamen();
+        consultasDBExamen();
+    }
+
+    private static void initDBExamen() {
+
+        //PERMISOS        
+        Permiso permiso1 = new Permiso();
+        permiso1.setDescripcion("permiso general");
+        permiso1.setNombre("alta contrato");
+
+        Permiso permiso2 = new Permiso();
+        permiso2.setDescripcion("permiso particular");
+        permiso2.setNombre("baja contrato");
+
+        Permiso permiso3 = new Permiso();
+        permiso3.setDescripcion("permiso general");
+        permiso3.setNombre("modificar contrato");
+
+        //ROLES        
+        Rol rolAdministrador = new Rol();
+        rolAdministrador.setDescripcion("rol administrativos de contratos");
+        rolAdministrador.setNombre("Administrador de contratos");
+
+        Rol rolcapturista = new Rol();
+        rolcapturista.setDescripcion("rol de capturista de contratos");
+        rolcapturista.setNombre("Capturista de contratos");
+
+        //relaciones roles con permisos - permisos con roles        
+        List<Permiso> permisosRolCapturista = new ArrayList<>();
+        permisosRolCapturista.add(permiso1);
+        permisosRolCapturista.add(permiso2);
+
+        List<Permiso> permisosRolAdministrador = new ArrayList<>();
+        permisosRolAdministrador.add(permiso1);
+        permisosRolAdministrador.add(permiso3);
+
+        rolAdministrador.setPermisoCollection(permisosRolAdministrador);
+        rolcapturista.setPermisoCollection(permisosRolCapturista);
+
+        //USUARIOS        
+        Usuario usuario1 = new Usuario();
+        usuario1.setNombre("ulises");
+        
+        Usuario usuario2 = new Usuario();
+        usuario2.setNombre("otro usuario");
                         
+        //relaciones usuarios con roles
+        usuario1.setRol(rolAdministrador);
+        usuario2.setRol(rolcapturista);
+        
+        
+        PermisoJpaController permisoController = new PermisoJpaController(FACTORY);
+        RolJpaController rolController = new RolJpaController(FACTORY);
+        UsuarioJpaController usuarioController = new UsuarioJpaController(FACTORY);
+        
+        permisoController.create(permiso1);
+        permisoController.create(permiso2);
+        permisoController.create(permiso3);
+        
+        rolController.create(rolcapturista);
+        rolController.create(rolAdministrador);
+        
+        usuarioController.create(usuario1);
+        usuarioController.create(usuario2);
+        
     }
 
-    private static void initDB() {
+    private static void consultasDBExamen() {
 
-        Region r1 = new Region();
-        r1.setNombre("primera");
-
-        Region r2 = new Region();
-        r2.setNombre("segunda");
-
-        Region r3 = new Region();
-        r3.setNombre("tercera");
-
-        Region r4 = new Region();
-        r4.setNombre("cuarta");
-
-        EM.getTransaction().begin();
-
-        EM.persist(r1);
-        EM.persist(r2);
-        EM.persist(r3);
-        EM.persist(r4);
-
-        EM.flush();
-
-        Sucursal s1 = new Sucursal();
-        s1.setDireccion("dir 1");
-        s1.setRegion(r1);
-
-        Sucursal s2 = new Sucursal();
-        s2.setDireccion("dir 2");
-        s2.setRegion(r1);
-
-        Sucursal s3 = new Sucursal();
-        s3.setDireccion("dir 3");
-        s3.setRegion(r2);
-
-        Sucursal s4 = new Sucursal();
-        s4.setDireccion("dir 4");
-        s4.setRegion(r3);
-
-        EM.persist(s1);
-        EM.persist(s2);
-        EM.persist(s3);
-        EM.persist(s4);
-
-        EM.flush();
-
-        EM.getTransaction().commit();
-        EM.close();
-    }
-    
-    private static void consultas(){
+        
+        System.out.println("Consulta de los roles con sus permisos y lo usuarios asignados (eager fecth)");
+        long time = System.currentTimeMillis();        
+        STREAMS.streamAll(EM, Rol.class)
+                .forEach( r -> System.out.println("rol: " + r.getId() + " permisos: " + r.getPermisoCollection() + " usuarios: " + r.getUsuarioCollection()));
+        long finalTime = System.currentTimeMillis();
+        
+        STREAMS.streamAll(EM, Usuario.class).forEach( u -> System.out.println("usuario: " + u.getId() + " permisos: " + u.getRol().getPermisoCollection()));
+        
+        
+        System.out.println("total tiempo : " + (finalTime - time));
+        
         
     }
 }

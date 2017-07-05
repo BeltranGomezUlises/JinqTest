@@ -3,45 +3,52 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package entities;
+package entities.postrgres;
 
 import java.io.Serializable;
-import java.util.Collection;
-import javax.persistence.CascadeType;
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
- * @author ulises
+ * @author Ulises Beltrán Gómez --- beltrangomezulises@gmail.com
  */
 @Entity
-@Table(name = "region")
+@Table(name = "usuario")
 @XmlRootElement
-public class Region implements Serializable {
+@NamedQueries({
+    @NamedQuery(name = "Usuario.findAll", query = "SELECT u FROM Usuario u")
+    , @NamedQuery(name = "Usuario.findById", query = "SELECT u FROM Usuario u WHERE u.id = :id")
+    , @NamedQuery(name = "Usuario.findByNombre", query = "SELECT u FROM Usuario u WHERE u.nombre = :nombre")})
+public class Usuario implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)    
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
     @Column(name = "nombre")
     private String nombre;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "region")
-    private Collection<Sucursal> sucursalCollection;
+    @JoinColumn(name = "rol", referencedColumnName = "id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Rol rol;
 
-    public Region() {
+    public Usuario() {
     }
 
-    public Region(Integer id) {
+    public Usuario(Integer id) {
         this.id = id;
     }
 
@@ -61,13 +68,12 @@ public class Region implements Serializable {
         this.nombre = nombre;
     }
 
-    @XmlTransient
-    public Collection<Sucursal> getSucursalCollection() {
-        return sucursalCollection;
+    public Rol getRol() {
+        return rol;
     }
 
-    public void setSucursalCollection(Collection<Sucursal> sucursalCollection) {
-        this.sucursalCollection = sucursalCollection;
+    public void setRol(Rol rol) {
+        this.rol = rol;
     }
 
     @Override
@@ -80,10 +86,10 @@ public class Region implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof Region)) {
+        if (!(object instanceof Usuario)) {
             return false;
         }
-        Region other = (Region) object;
+        Usuario other = (Usuario) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -92,7 +98,7 @@ public class Region implements Serializable {
 
     @Override
     public String toString() {
-        return "entities.Region[ id=" + id + " ]";
+        return "entities.Usuario[ id=" + id + " ]";
     }
     
 }
